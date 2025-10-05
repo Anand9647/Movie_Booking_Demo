@@ -34,6 +34,10 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: if your org blocks GITHUB_TOKEN from pushing, create a PAT with repo scope
+          # and add it as the secret GH_PAGES_PAT in Settings → Secrets → Actions.
+          # The action will use this token if present.
+          personal_token: ${{ secrets.GH_PAGES_PAT }}
           publish_dir: ./frontend/dist
           publish_branch: gh-pages
           # Set the commit message for traceability
