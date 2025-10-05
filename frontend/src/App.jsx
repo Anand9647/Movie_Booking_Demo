@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react'
 import MovieList from './components/MovieList'
 import SeatSelector from './components/SeatSelector'
 import './styles.css'
+import { mockAPI } from './mockData'
 
 const API = 'http://localhost:4000/api'
+const IS_GITHUB_PAGES = import.meta.env.MODE === 'production' && window.location.hostname.includes('github.io')
 
 export default function App() {
   const [movies, setMovies] = useState([])
@@ -13,12 +15,22 @@ export default function App() {
   const [selectedSeats, setSelectedSeats] = useState([])
 
   useEffect(() => {
-    fetch(API + '/movies').then(r => r.json()).then(setMovies)
+    if (IS_GITHUB_PAGES) {
+      // Use mock data for GitHub Pages
+      mockAPI.movies().then(setMovies)
+    } else {
+      fetch(API + '/movies').then(r => r.json()).then(setMovies)
+    }
   }, [])
 
   useEffect(() => {
     if (selectedShowtime) {
-      fetch(`${API}/showtimes/${selectedShowtime.id}/seats`).then(r => r.json()).then(setSeats)
+      if (IS_GITHUB_PAGES) {
+        // Use mock seats for GitHub Pages
+        mockAPI.seats(selectedShowtime.id).then(setSeats)
+      } else {
+        fetch(`${API}/showtimes/${selectedShowtime.id}/seats`).then(r => r.json()).then(setSeats)
+      }
       setSelectedSeats([])
     }
   }, [selectedShowtime])
@@ -30,19 +42,19 @@ export default function App() {
           <div className="logo">MB</div>
           <div>
             <h1 className="title">Movie Booking</h1>
-            <p className="muted">Pick a movie, choose seats and book — demo with mocked payments</p>
+            <p className="muted">Pick a movie, choose seats and book — demo with mocked payments{IS_GITHUB_PAGES ? ' (Static Demo)' : ''}</p>
           </div>
         </div>
       </header>
 
       <main className="app-main">
-        <MovieList movies={movies} onSelect={(m, s) => { setSelectedMovie(m); setSelectedShowtime(s); }} />
+        <MovieList movies={movies} onSelect={(m, s) => { setSelectedMovie(m); setSelectedShowtime(s); }} isGithubPages={IS_GITHUB_PAGES} />
 
         <section className="right-column">
           {selectedMovie ? (
             <div className="selected-panel">
               <div className="movie-detail">
-                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? `http://localhost:4000${selectedMovie.posterUrl}` : selectedMovie.posterUrl} alt="poster" />
+                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? (IS_GITHUB_PAGES ? selectedMovie.posterUrl : `http://localhost:4000${selectedMovie.posterUrl}`) : selectedMovie.posterUrl} alt="poster" />
                 <div>
                   <h2>{selectedMovie.title}</h2>
                   <p className="muted">{selectedMovie.description}</p>
@@ -57,7 +69,7 @@ export default function App() {
               </div>
 
               {selectedShowtime ? (
-                <SeatSelector seats={seats} selectedSeats={selectedSeats} setSelectedSeats={setSelectedSeats} showtime={selectedShowtime} movie={selectedMovie} />
+                <SeatSelector seats={seats} selectedSeats={selectedSeats} setSelectedSeats={setSelectedSeats} showtime={selectedShowtime} movie={selectedMovie} isGithubPages={IS_GITHUB_PAGES} />
               ) : (
                 <div className="placeholder">Select a showtime to view seats</div>
               )}

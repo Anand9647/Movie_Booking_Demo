@@ -8,7 +8,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      BASE_REPO_NAME: movie_booking_demo
+      BASE_REPO_NAME: Movie_Booking_Demo
     steps:
       - uses: actions/checkout@v4
 

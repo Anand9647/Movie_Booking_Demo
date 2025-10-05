@@ -1,8 +1,11 @@
 import React from 'react'
 
-export default function MovieList({ movies, onSelect }) {
+export default function MovieList({ movies, onSelect, isGithubPages }) {
   const resolvePoster = (p) => {
     if (!p) return '';
+    if (isGithubPages) {
+      return p; // On GitHub Pages, posters are served from the build
+    }
     return p.startsWith('/posters') ? `http://localhost:4000${p}` : p;
   }
 

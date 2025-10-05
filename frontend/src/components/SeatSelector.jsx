@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import DemoPaymentModal from './DemoPaymentModal'
+import { mockAPI } from '../mockData'
 
 const API = 'http://localhost:4000/api'
 
@@ -14,7 +15,7 @@ function groupSeats(seats) {
   return map;
 }
 
-export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, showtime, movie }) {
+export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, showtime, movie, isGithubPages }) {
   const rows = useMemo(() => groupSeats(seats), [seats]);
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
@@ -24,6 +25,9 @@ export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, s
 
   const resolvePoster = (p) => {
     if (!p) return '';
+    if (isGithubPages) {
+      return p; // On GitHub Pages, posters are served from the build
+    }
     return p.startsWith('/posters') ? `http://localhost:4000${p}` : p;
   }
 
@@ -42,24 +46,30 @@ export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, s
     
     try {
       // Create demo order
-      const orderResponse = await fetch(API + '/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: total,
-          currency: 'INR',
-          receipt: `booking_${Date.now()}`,
-          notes: {
-            showtimeId: showtime.id,
-            customerName,
-            customerEmail,
-            seats: selectedSeats.map(s => `${s.row}${s.number}`).join(',')
-          }
-        })
-      })
+      const orderData = {
+        amount: total,
+        currency: 'INR',
+        receipt: `booking_${Date.now()}`,
+        notes: {
+          showtimeId: showtime.id,
+          customerName,
+          customerEmail,
+          seats: selectedSeats.map(s => `${s.row}${s.number}`).join(',')
+        }
+      };
       
-      const order = await orderResponse.json()
-      if (!orderResponse.ok) throw new Error(order.error)
+      let order;
+      if (isGithubPages) {
+        order = await mockAPI.createOrder(orderData);
+      } else {
+        const orderResponse = await fetch(API + '/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        order = await orderResponse.json();
+        if (!orderResponse.ok) throw new Error(order.error);
+      }
       
       // Show demo payment modal
       setOrderData({
@@ -80,26 +90,41 @@ export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, s
     setMessage('Processing booking...')
     
     try {
-      const bookingResponse = await fetch(API + '/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          showtimeId: showtime.id,
-          seats: selectedSeats,
-          customerName,
-          customerEmail,
-          payment: paymentResponse
-        })
-      })
+      const bookingData = {
+        showtimeId: showtime.id,
+        seats: selectedSeats,
+        customerName,
+        customerEmail,
+        payment: paymentResponse
+      };
       
-      const bookingData = await bookingResponse.json()
-      if (bookingResponse.ok) {
-        setMessage(`🎉 Demo booking successful! Booking ID: ${bookingData.bookingId}`)
-        setSelectedSeats([])
-        setTimeout(() => window.location.reload(), 3000)
+      let result;
+      if (isGithubPages) {
+        result = await mockAPI.createBooking(bookingData);
       } else {
-        setMessage('Booking failed: ' + (bookingData.error || 'Unknown error'))
+        const bookingResponse = await fetch(API + '/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData)
+        });
+        result = await bookingResponse.json();
+        if (!bookingResponse.ok) {
+          throw new Error(result.error || 'Unknown error');
+        }
       }
+      
+      setMessage(`🎉 Demo booking successful! Booking ID: ${result.bookingId}`)
+      setSelectedSeats([])
+      if (isGithubPages) {
+        setMessage(msg => msg + ' (Note: This is a static demo - bookings are not persisted)')
+      }
+      setTimeout(() => {
+        if (!isGithubPages) {
+          window.location.reload()
+        } else {
+          setMessage(null);
+        }
+      }, 5000)
     } catch (err) {
       setMessage('Booking error: ' + err.message)
     }
