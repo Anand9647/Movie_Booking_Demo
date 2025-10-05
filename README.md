@@ -2,6 +2,12 @@
 
 A full-stack movie booking application with seat selection and demo payment integration.
 
+## 🌐 Live Demo
+
+**GitHub Pages:** [https://anand9647.github.io/Movie_Booking_Demo/](https://anand9647.github.io/Movie_Booking_Demo/)
+
+The GitHub Pages deployment runs as a static demo with mock data. For the full experience with backend API, follow the local setup instructions below.
+
 ## 🛠️ Technology Stack
 
 - **Backend**: Node.js + Express + Sequelize + SQLite
@@ -153,6 +159,24 @@ The application is ready for deployment with:
 - Production-ready database schema
 - Error handling and validation
 - CORS setup for cross-origin requests
+
+### GitHub Pages Deployment
+
+This repository is configured to automatically deploy to GitHub Pages:
+
+1. **Automatic Deployment**: Push to `main` branch triggers GitHub Actions workflow
+2. **Live URL**: [https://anand9647.github.io/Movie_Booking_Demo/](https://anand9647.github.io/Movie_Booking_Demo/)
+3. **Static Demo Mode**: GitHub Pages deployment uses mock data (no backend required)
+
+To deploy to your own GitHub Pages:
+1. Fork this repository
+2. Enable GitHub Pages in repository settings (set source to `gh-pages` branch)
+3. Push changes to `main` branch - automatic deployment will trigger
+4. Update the `BASE_REPO_NAME` in `.github/workflows/deploy.yml` if your repo name differs
+
+### Local Development with Backend
+
+For the full experience with backend API and database, follow the Quick Start guide above.
 
 ---
 
