@@ -4,7 +4,8 @@ export default function MovieList({ movies, onSelect, isGithubPages }) {
   const resolvePoster = (p) => {
     if (!p) return '';
     if (isGithubPages) {
-      return p; // On GitHub Pages, posters are served from the build
+      // On GitHub Pages, use relative path from base URL
+      return p.startsWith('/') ? `.${p}` : p;
     }
     return p.startsWith('/posters') ? `http://localhost:4000${p}` : p;
   }

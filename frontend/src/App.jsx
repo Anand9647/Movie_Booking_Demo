@@ -5,6 +5,7 @@ import './styles.css'
 import { mockAPI } from './mockData'
 
 const API = 'http://localhost:4000/api'
+// Detect GitHub Pages or if backend is not available
 const IS_GITHUB_PAGES = import.meta.env.MODE === 'production' && window.location.hostname.includes('github.io')
 
 export default function App() {
@@ -13,27 +14,46 @@ export default function App() {
   const [selectedShowtime, setSelectedShowtime] = useState(null)
   const [seats, setSeats] = useState([])
   const [selectedSeats, setSelectedSeats] = useState([])
+  const [usingMockData, setUsingMockData] = useState(IS_GITHUB_PAGES)
 
   useEffect(() => {
     if (IS_GITHUB_PAGES) {
       // Use mock data for GitHub Pages
       mockAPI.movies().then(setMovies)
+      setUsingMockData(true)
     } else {
-      fetch(API + '/movies').then(r => r.json()).then(setMovies)
+      // Try backend first, fall back to mock data if not available
+      fetch(API + '/movies')
+        .then(r => {
+          if (!r.ok) throw new Error('Backend not available')
+          return r.json()
+        })
+        .then(setMovies)
+        .catch(() => {
+          console.log('Backend not available, using mock data')
+          setUsingMockData(true)
+          mockAPI.movies().then(setMovies)
+        })
     }
   }, [])
 
   useEffect(() => {
     if (selectedShowtime) {
-      if (IS_GITHUB_PAGES) {
-        // Use mock seats for GitHub Pages
+      if (usingMockData) {
+        // Use mock seats
         mockAPI.seats(selectedShowtime.id).then(setSeats)
       } else {
-        fetch(`${API}/showtimes/${selectedShowtime.id}/seats`).then(r => r.json()).then(setSeats)
+        fetch(`${API}/showtimes/${selectedShowtime.id}/seats`)
+          .then(r => r.json())
+          .then(setSeats)
+          .catch(() => {
+            console.log('Backend not available, using mock seats')
+            mockAPI.seats(selectedShowtime.id).then(setSeats)
+          })
       }
       setSelectedSeats([])
     }
-  }, [selectedShowtime])
+  }, [selectedShowtime, usingMockData])
 
   return (
     <div className="app-root">
@@ -42,19 +62,19 @@ export default function App() {
           <div className="logo">MB</div>
           <div>
             <h1 className="title">Movie Booking</h1>
-            <p className="muted">Pick a movie, choose seats and book — demo with mocked payments{IS_GITHUB_PAGES ? ' (Static Demo)' : ''}</p>
+            <p className="muted">Pick a movie, choose seats and book — demo with mocked payments{usingMockData ? ' (Static Demo)' : ''}</p>
           </div>
         </div>
       </header>
 
       <main className="app-main">
-        <MovieList movies={movies} onSelect={(m, s) => { setSelectedMovie(m); setSelectedShowtime(s); }} isGithubPages={IS_GITHUB_PAGES} />
+        <MovieList movies={movies} onSelect={(m, s) => { setSelectedMovie(m); setSelectedShowtime(s); }} isGithubPages={usingMockData} />
 
         <section className="right-column">
           {selectedMovie ? (
             <div className="selected-panel">
               <div className="movie-detail">
-                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? (IS_GITHUB_PAGES ? selectedMovie.posterUrl : `http://localhost:4000${selectedMovie.posterUrl}`) : selectedMovie.posterUrl} alt="poster" />
+                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? (usingMockData ? selectedMovie.posterUrl : `http://localhost:4000${selectedMovie.posterUrl}`) : selectedMovie.posterUrl} alt="poster" />
                 <div>
                   <h2>{selectedMovie.title}</h2>
                   <p className="muted">{selectedMovie.description}</p>
@@ -69,7 +89,7 @@ export default function App() {
               </div>
 
               {selectedShowtime ? (
-                <SeatSelector seats={seats} selectedSeats={selectedSeats} setSelectedSeats={setSelectedSeats} showtime={selectedShowtime} movie={selectedMovie} isGithubPages={IS_GITHUB_PAGES} />
+                <SeatSelector seats={seats} selectedSeats={selectedSeats} setSelectedSeats={setSelectedSeats} showtime={selectedShowtime} movie={selectedMovie} isGithubPages={usingMockData} />
               ) : (
                 <div className="placeholder">Select a showtime to view seats</div>
               )}
