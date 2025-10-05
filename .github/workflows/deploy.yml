@@ -30,6 +30,20 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
+      - name: Rewrite asset paths for GitHub Pages base
+        if: env.BASE_REPO_NAME != ''
+        run: |
+          echo "Rewriting root asset paths to include /${{ env.BASE_REPO_NAME }} prefix"
+          repo="/${{ env.BASE_REPO_NAME }}"
+          file=frontend/dist/index.html
+          if [ -f "$file" ]; then
+            sed -i "s|href=\"/assets|href=\"${repo}/assets|g" "$file"
+            sed -i "s|src=\"/assets|src=\"${repo}/assets|g" "$file"
+            echo "Rewrote $file"
+          else
+            echo "$file not found, skipping path rewrite"
+          fi
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
