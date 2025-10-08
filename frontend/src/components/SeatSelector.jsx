@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import DemoPaymentModal from './DemoPaymentModal'
 
-const API = 'http://localhost:4000/api'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'
 
 function groupSeats(seats) {
   const map = {};
@@ -24,7 +24,7 @@ export default function SeatSelector({ seats, selectedSeats, setSelectedSeats, s
 
   const resolvePoster = (p) => {
     if (!p) return '';
-    return p.startsWith('/posters') ? `http://localhost:4000${p}` : p;
+    return p.startsWith('/posters') ? `${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/api\/?$/, '')}${p}` : p;
   }
 
   const toggleSeat = (seat) => {

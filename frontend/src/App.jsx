@@ -3,7 +3,7 @@ import MovieList from './components/MovieList'
 import SeatSelector from './components/SeatSelector'
 import './styles.css'
 
-const API = 'http://localhost:4000/api'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'
 
 export default function App() {
   const [movies, setMovies] = useState([])
@@ -42,7 +42,7 @@ export default function App() {
           {selectedMovie ? (
             <div className="selected-panel">
               <div className="movie-detail">
-                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? `http://localhost:4000${selectedMovie.posterUrl}` : selectedMovie.posterUrl} alt="poster" />
+                <img src={selectedMovie.posterUrl?.startsWith('/posters') ? `${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/api\/?$/, '')}${selectedMovie.posterUrl}` : selectedMovie.posterUrl} alt="poster" />
                 <div>
                   <h2>{selectedMovie.title}</h2>
                   <p className="muted">{selectedMovie.description}</p>

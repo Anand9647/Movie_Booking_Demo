@@ -3,7 +3,7 @@ import React from 'react'
 export default function MovieList({ movies, onSelect }) {
   const resolvePoster = (p) => {
     if (!p) return '';
-    return p.startsWith('/posters') ? `http://localhost:4000${p}` : p;
+  return p.startsWith('/posters') ? `${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/api\/?$/, '')}${p}` : p;
   }
 
   const formatVotes = (votes) => {
