@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: movie-booking-backend
+    env: node
+    region: oregon
+    branch: main
+    plan: starter
+    buildCommand: cd backend && npm ci
+    startCommand: bash -lc "node backend/seed.js || true; cd backend && npm start"
+    rootDir: .
+    disk:
+      name: moviebooking-disk
+      mountPath: /tmp/moviebooking_disk
+      sizeGb: 1
+    envVars:
+      - key: PORT
+        value: "4000"
